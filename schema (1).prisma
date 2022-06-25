@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String
+  mobileNumber String
+  joiningDate  DateTime
+  gender       String
+  ageGroup     String // to be another table
+  country      String
+  city         String
+  points       Int
+
+  allyId Int
+  ally   Ally @relation(fields: [allyId], references: [id])
+}
+
+model Ally {
+  id            Int             @id @default(autoincrement())
+  name          String
+  domain        String
+  User          User[]
+  Promotion     Promotion[]
+  AllyPromotion AllyPromotion[]
+}
+
+model Bill {
+  id             Int        @id @default(autoincrement())
+  userId         Int
+  merchantId     Int
+  branchId       Int
+  itemCount      Int
+  pointsRedeemed Int
+  amount         Float
+  discount       Float
+  tax            Float
+  total          Float
+  promotionId    Int
+  billItem       BillItem[]
+}
+
+model BillItem {
+  billId    Int
+  productId Int
+  itemCount Int
+  bill      Bill @relation(fields: [billId], references: [id])
+
+  @@id([productId, billId])
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  merchantId  Int
+  name        String
+  description String
+  price       Float
+  image       String
+  category    String // to be another table
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+}
+
+model Merchant {
+  id          Int      @id @default(autoincrement())
+  name        String
+  logo        String
+  description String
+  address     String
+  phone       String
+  email       String
+  joiningDate DateTime
+
+  Branch  Branch[]
+  Product Product[]
+}
+
+model Branch {
+  id         Int   @id @default(autoincrement())
+  merchantId Int
+  latitude   Float
+  longitude  Float
+
+  merchant Merchant @relation(fields: [merchantId], references: [id])
+}
+
+model Redemption {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  date           DateTime
+  redeemedPoints Int
+  branchId       Int
+  productId      Int
+}
+
+model Promotion {
+  id               Int      @id @default(autoincrement())
+  validSince       DateTime
+  validThrough     DateTime
+  usageLimit       Int /// how many times a user can use it 
+  image            String
+  short_descriptin String
+  full_descriptin  String
+  type             String // to be enum
+  redeemedPoints   Int
+  Ally             Ally?    @relation(fields: [allyId], references: [id])
+  allyId           Int?
+}
+
+model MerchantPromotion {
+  id             Int @id
+  merchantId     Int
+  redeemedPoints Int
+}
+
+model AllyPromotion {
+  id          Int  @id
+  allyId      Int
+  ally        Ally @relation(fields: [allyId], references: [id])
+  givenPoints Int
+  productId   Int
+  merchantId  Int
+}
+
+model ProductPromotion {
+  id             Int @id
+  productId      Int
+  redeemedPoints Int
+}
+
+model PromotionUser {
+  userId      Int
+  promotionId Int
+
+  @@id([userId, promotionId])
+}
+
+
+
+// schema > READY DB > UI Sketch > backend design  |||  backend dev & frontend ||| DW design > DW dev  (from DB to DW)
